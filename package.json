@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Site profissional do estúdio Tattoo até os Ossos - Vila Prudente SP",
-  "homepage": "https://www.tattooateosossos.com.br",
-  "scripts": {
+    "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
