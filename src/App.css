@@ -5,6 +5,27 @@
   box-sizing: border-box;
 }
 
+/* Animação de entrada ao rolar a página (usada pelo componente <Reveal>) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .App {
   text-align: center;
 }
@@ -29,12 +50,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ea580c;
+  background: #12a844;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c2410c;
+  background: #0c7d33;
 }
 
 /* Animações personalizadas */
@@ -49,20 +70,20 @@ body {
   }
 }
 
-@keyframes pulse-orange {
+@keyframes pulse-green {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7);
+    box-shadow: 0 0 0 0 rgba(18, 168, 68, 0.7);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(234, 88, 12, 0);
+    box-shadow: 0 0 0 10px rgba(18, 168, 68, 0);
   }
 }
 
 /* Animação para o WhatsApp Button */
 .pulse-animation {
-  animation: pulse-orange 2s infinite;
+  animation: pulse-green 2s infinite;
 }
 
 /* Efeitos de hover para cards */
@@ -76,8 +97,8 @@ body {
 }
 
 /* Gradientes personalizados */
-.gradient-orange {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+.gradient-green {
+  background: linear-gradient(135deg, #12a844 0%, #0c7d33 100%);
 }
 
 .gradient-dark {
@@ -92,8 +113,8 @@ body {
 /* Estilos para formulários */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  ring: 2px solid #ea580c;
-  border-color: #ea580c;
+  ring: 2px solid #12a844;
+  border-color: #12a844;
 }
 
 /* Animações para elementos que entram na tela */
@@ -178,7 +199,7 @@ input:focus, textarea:focus, select:focus {
 
 /* Botões personalizados */
 .btn-primary {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(135deg, #12a844 0%, #0c7d33 100%);
   border: none;
   color: white;
   padding: 1rem 2rem;
@@ -192,15 +213,15 @@ input:focus, textarea:focus, select:focus {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+  background: linear-gradient(135deg, #0c7d33 0%, #085924 100%);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 10px 25px rgba(18, 168, 68, 0.3);
 }
 
 .btn-secondary {
   background: transparent;
-  border: 2px solid #ea580c;
-  color: #ea580c;
+  border: 2px solid #12a844;
+  color: #12a844;
   padding: 1rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -212,7 +233,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .btn-secondary:hover {
-  background: #ea580c;
+  background: #12a844;
   color: white;
   transform: translateY(-2px);
 }
@@ -222,8 +243,8 @@ input:focus, textarea:focus, select:focus {
   background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
 }
 
-.section-orange {
-  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+.section-green {
+  background: linear-gradient(135deg, #eafcf1 0%, #94eebb 100%);
 }
 
 /* Loading states */
@@ -243,4 +264,139 @@ input:focus, textarea:focus, select:focus {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ============================================================
+   RAIOX UI — visual "dashboard / raio-x" (estilo referência)
+   grid de fundo, cards flutuantes, linha de scan e gauge animado
+   ============================================================ */
+
+/* grade de pontos, tipo "painel de dados" */
+.raiox-grid-bg {
+  background-image: radial-gradient(rgba(57, 255, 106, 0.16) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* brilhos difusos no fundo, dão profundidade sem pesar */
+.raiox-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+@keyframes raiox-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(0.4deg); }
+}
+.raiox-float {
+  animation: raiox-float 6s ease-in-out infinite;
+}
+
+@keyframes raiox-float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(10px); }
+}
+.raiox-float-slow {
+  animation: raiox-float-slow 8s ease-in-out infinite;
+}
+
+/* linha de "scan" tipo raio-x atravessando o painel */
+@keyframes raiox-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(220%); opacity: 0; }
+}
+.raiox-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent 0%, rgba(57, 255, 106, 0.22) 50%, transparent 100%);
+  animation: raiox-scan 4s linear infinite;
+  pointer-events: none;
+}
+
+/* painel "dashboard" flutuante */
+.raiox-panel {
+  background: linear-gradient(160deg, rgba(20, 24, 22, 0.92) 0%, rgba(10, 13, 11, 0.96) 100%);
+  border: 1px solid rgba(57, 255, 106, 0.25);
+  box-shadow: 0 0 0 1px rgba(57, 255, 106, 0.05), 0 30px 60px -20px rgba(0, 0, 0, 0.7), 0 0 60px -15px rgba(57, 255, 106, 0.25);
+  backdrop-filter: blur(6px);
+  position: relative;
+  overflow: hidden;
+}
+
+.raiox-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5de89b;
+  background: rgba(57, 255, 106, 0.08);
+  border: 1px solid rgba(57, 255, 106, 0.3);
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+}
+
+.raiox-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #39FF6A;
+  box-shadow: 0 0 8px 2px rgba(57, 255, 106, 0.8);
+}
+@keyframes raiox-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.raiox-chip-dot {
+  animation: raiox-blink 1.6s ease-in-out infinite;
+}
+
+/* gauge circular (SVG) que "desenha" ao entrar na tela */
+.raiox-gauge-fg {
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+}
+.reveal-visible .raiox-gauge-fg {
+  stroke-dashoffset: var(--gauge-offset, 40);
+}
+
+/* números que "contam" sutilmente via escala ao aparecer */
+@keyframes raiox-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.raiox-pop {
+  animation: raiox-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* cards escuros com destaque neon no hover, usados em serviços/sobre/contato */
+.raiox-card {
+  background: #0d1210;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+}
+.raiox-card:hover {
+  border-color: rgba(57, 255, 106, 0.55);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6), 0 0 40px -10px rgba(57, 255, 106, 0.3);
+  transform: translateY(-6px);
+}
+
+/* linha decorativa tracejada, referência "raio-x" técnico */
+.raiox-hairline {
+  background-image: repeating-linear-gradient(90deg, rgba(57, 255, 106, 0.5) 0 6px, transparent 6px 12px);
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raiox-float, .raiox-float-slow, .raiox-scanline, .raiox-chip-dot {
+    animation: none;
+  }
 }

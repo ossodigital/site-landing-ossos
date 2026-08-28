@@ -1,9 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MapPin, Phone, Clock, Instagram, Star, Zap, Shield, Heart, Mail, User, MessageCircle, Menu, X, ChevronDown, CheckCircle } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Componente que revela seus filhos com uma animação suave (fade + slide)
+// assim que entram na tela — dá movimento à página sem depender de nada externo.
+const Reveal = ({ children, className = "", delay = 0, as: Tag = "div" }) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <Tag
+      ref={ref}
+      className={`reveal ${visible ? "reveal-visible" : ""} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </Tag>
+  );
+};
 
 // Componente de WhatsApp flutuante
 const WhatsAppButton = () => {
@@ -35,22 +68,22 @@ const Header = () => {
               className="w-10 h-10 rounded-full"
             />
             <div>
-              <h1 className="text-xl font-bold text-orange-500">TAO</h1>
+              <h1 className="text-xl font-bold text-raiox-500">TAO</h1>
               <p className="text-xs text-gray-400">Tattoo até os Ossos</p>
             </div>
           </div>
           
           {/* Desktop Menu */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#sobre" className="hover:text-orange-500 transition-colors">Sobre</a>
-            <a href="#servicos" className="hover:text-orange-500 transition-colors">Serviços</a>
-            <a href="#portfolio" className="hover:text-orange-500 transition-colors">Portfolio</a>
-            <a href="#contato" className="hover:text-orange-500 transition-colors">Contato</a>
+            <a href="#sobre" className="hover:text-raiox-500 transition-colors">Sobre</a>
+            <a href="#servicos" className="hover:text-raiox-500 transition-colors">Serviços</a>
+            <a href="#portfolio" className="hover:text-raiox-500 transition-colors">Portfolio</a>
+            <a href="#contato" className="hover:text-raiox-500 transition-colors">Contato</a>
             <a
               href="https://wa.me/5511939369778"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg transition-colors"
+              className="bg-raiox-600 hover:bg-raiox-700 px-4 py-2 rounded-lg transition-colors"
             >
               Agendar
             </a>
@@ -70,15 +103,15 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden mt-4 py-4 border-t border-gray-700">
             <div className="flex flex-col space-y-4">
-              <a href="#sobre" className="hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Sobre</a>
-              <a href="#servicos" className="hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Serviços</a>
-              <a href="#portfolio" className="hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Portfolio</a>
-              <a href="#contato" className="hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Contato</a>
+              <a href="#sobre" className="hover:text-raiox-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Sobre</a>
+              <a href="#servicos" className="hover:text-raiox-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Serviços</a>
+              <a href="#portfolio" className="hover:text-raiox-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Portfolio</a>
+              <a href="#contato" className="hover:text-raiox-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Contato</a>
               <a
                 href="https://wa.me/5511939369778"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg transition-colors text-center"
+                className="bg-raiox-600 hover:bg-raiox-700 px-4 py-2 rounded-lg transition-colors text-center"
               >
                 Agendar
               </a>
@@ -90,71 +123,141 @@ const Header = () => {
   );
 };
 
-// Hero Section - SEM foto de fundo
+// Hero Section - estilo "dashboard raio-x": tipografia gigante + painel flutuante
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-black via-gray-900 to-orange-900 overflow-hidden pt-24">
-      <div className="absolute inset-0 bg-black/40"></div>
-      
-      <div className="relative z-10 container mx-auto px-4 py-20 flex flex-col justify-center min-h-screen">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="mb-8">
-            <img
-              src="/images/logo/tattoo-ate-os-ossos.png"
-              alt="Tattoo até os Ossos Logo"
-              className="w-32 h-32 mx-auto mb-6 rounded-full bg-white/10 p-4"
-              data-testid="hero-logo"
-            />
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 text-shadow" data-testid="hero-title">
-            <span className="text-orange-500">TATTOO</span> ATÉ OS 
-            <span className="block text-orange-500">OSSOS</span>
-          </h1>
-          
-          <p className="text-2xl md:text-3xl text-gray-300 mb-6 max-w-4xl mx-auto leading-relaxed">
-            Estúdio referência em <span className="text-orange-400 font-semibold">realismo, blackwork e piercing profissional</span> em São Paulo
-          </p>
-          
-          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-            Mais de 15 anos criando arte exclusiva na pele, com técnica, segurança e estilo. 
-            <span className="text-orange-400 block mt-4 text-2xl font-semibold">Venha viver sua experiência até os ossos. 💀🔥</span>
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-            <a
-              href="https://wa.me/5511939369778?text=Olá! Gostaria de agendar uma consulta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-orange-600 hover:bg-orange-700 text-white px-10 py-5 rounded-lg font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-xl"
-              data-testid="hero-whatsapp-button"
-            >
-              <Phone className="inline-block mr-3" size={24} />
-              AGENDAR CONSULTA
-            </a>
-            <a
-              href="#portfolio"
-              className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-10 py-5 rounded-lg font-bold text-xl transition-all duration-300"
-              data-testid="hero-portfolio-button"
-            >
-              VER PORTFOLIO
-            </a>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-8 text-gray-400">
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
-              <MapPin size={20} />
-              <span className="font-medium">Vila Prudente - Vila Zelina</span>
+    <section className="relative min-h-screen bg-black overflow-hidden pt-24">
+      {/* fundo: grade de pontos + brilhos difusos, estilo painel de dados */}
+      <div className="absolute inset-0 raiox-grid-bg opacity-60"></div>
+      <div className="raiox-glow w-[36rem] h-[36rem] bg-raiox-500/20 -top-40 -left-40"></div>
+      <div className="raiox-glow w-[30rem] h-[30rem] bg-raiox-600/20 bottom-0 right-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/70 to-black"></div>
+
+      <div className="relative z-10 container mx-auto px-4 py-16 lg:py-0 flex items-center min-h-screen">
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-center w-full max-w-7xl mx-auto">
+
+          {/* Coluna de texto */}
+          <Reveal as="div" className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-3 mb-8">
+              <img
+                src="/images/logo/tattoo-ate-os-ossos.png"
+                alt="Tattoo até os Ossos Logo"
+                className="w-14 h-14 rounded-full bg-white/10 p-2"
+                data-testid="hero-logo"
+              />
+              <span className="raiox-chip">
+                <span className="raiox-chip-dot"></span>
+                Estúdio ativo · São Paulo
+              </span>
             </div>
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
-              <Star size={20} className="text-yellow-500" />
-              <span className="font-medium">15+ Anos de Experiência</span>
+
+            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-white mb-8 leading-[0.95] tracking-tight" data-testid="hero-title">
+              TATTOO
+              <span className="block text-raiox-400">ATÉ OS</span>
+              <span className="block">OSSOS</span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-gray-300 mb-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              Estúdio referência em <span className="text-raiox-400 font-semibold">realismo, fechamentos e blackwork</span> em São Paulo
+            </p>
+
+            <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-xl mx-auto lg:mx-0">
+              Mais de 15 anos criando arte exclusiva na pele, com técnica, segurança e estilo.
+              <span className="text-raiox-400 block mt-3 font-semibold">Venha viver sua experiência até os ossos. 💀🔥</span>
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start mb-12">
+              <a
+                href="https://wa.me/5511926355407?text=Olá! Gostaria de agendar uma consulta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-raiox-500 hover:bg-raiox-400 text-black px-9 py-5 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-[0_0_40px_-10px_rgba(57,255,106,0.6)]"
+                data-testid="hero-whatsapp-button"
+              >
+                <Phone className="inline-block mr-3" size={22} />
+                AGENDAR CONSULTA
+              </a>
+              <a
+                href="#portfolio"
+                className="border-2 border-raiox-500/60 text-raiox-400 hover:bg-raiox-500 hover:text-black px-9 py-5 rounded-lg font-bold text-lg transition-all duration-300"
+                data-testid="hero-portfolio-button"
+              >
+                VER PORTFOLIO
+              </a>
             </div>
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg">
-              <Shield size={20} className="text-green-500" />
-              <span className="font-medium">100% Esterilizado</span>
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-gray-400">
+              <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
+                <MapPin size={18} className="text-raiox-400" />
+                <span className="font-medium text-sm">Vila Prudente - Vila Zelina</span>
+              </div>
+              <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
+                <Shield size={18} className="text-raiox-400" />
+                <span className="font-medium text-sm">100% Esterilizado</span>
+              </div>
             </div>
-          </div>
+          </Reveal>
+
+          {/* Painel flutuante estilo dashboard/raio-x */}
+          <Reveal as="div" delay={200} className="hidden lg:block">
+            <div className="raiox-panel raiox-float rounded-2xl p-8 max-w-sm ml-auto">
+              <div className="raiox-scanline"></div>
+              <div className="flex items-center justify-between mb-8 relative">
+                <span className="raiox-chip">
+                  <span className="raiox-chip-dot"></span>
+                  Diagnóstico do estúdio
+                </span>
+                <Zap className="text-raiox-400" size={18} />
+              </div>
+
+              <div className="flex items-center gap-6 mb-8 relative">
+                <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90 flex-shrink-0">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                  <circle
+                    cx="50" cy="50" r="45" fill="none" stroke="#39FF6A" strokeWidth="8" strokeLinecap="round"
+                    className="raiox-gauge-fg"
+                    style={{ '--gauge-offset': 8 }}
+                  />
+                </svg>
+                <div>
+                  <div className="text-4xl font-black text-white">100%</div>
+                  <div className="text-gray-400 text-sm font-medium">Satisfação dos clientes</div>
+                </div>
+              </div>
+
+              <div className="raiox-hairline mb-6"></div>
+
+              <div className="space-y-4 relative">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Tatuagens realizadas</span>
+                  <span className="text-white font-bold">1500+</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Anos de estúdio</span>
+                  <span className="text-white font-bold">15</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Avaliação Google</span>
+                  <span className="text-white font-bold flex items-center gap-1">
+                    4.9 <Star size={14} className="text-raiox-400 fill-raiox-400" />
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* card secundário, flutua com atraso/velocidade diferente */}
+            <div className="raiox-panel raiox-float-slow rounded-xl px-6 py-4 max-w-[220px] mt-6 ml-auto -translate-x-6">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-raiox-500/15 border border-raiox-500/40 flex items-center justify-center">
+                  <Shield size={16} className="text-raiox-400" />
+                </div>
+                <div>
+                  <div className="text-white font-bold text-sm">Materiais 100%</div>
+                  <div className="text-gray-500 text-xs">Esterilizados</div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -170,7 +273,7 @@ const ImageModal = ({ src, alt, isOpen, onClose }) => {
       <div className="relative max-w-4xl max-h-full">
         <button
           onClick={onClose}
-          className="absolute -top-10 right-0 text-white hover:text-orange-400 transition-colors"
+          className="absolute -top-10 right-0 text-white hover:text-raiox-400 transition-colors"
           data-testid="modal-close-button"
         >
           <X size={32} />
@@ -189,151 +292,161 @@ const ImageModal = ({ src, alt, isOpen, onClose }) => {
   );
 };
 
-// Seção Sobre - Com perfis do Coringa e Jennyfer
+// Seção Sobre - Com perfis do Coringa e Jennyfer, estilo painel de dados
 const AboutSection = () => {
   return (
-    <section id="sobre" className="py-24 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section id="sobre" className="relative py-24 bg-black overflow-hidden">
+      <div className="absolute inset-0 raiox-grid-bg opacity-40"></div>
+      <div className="raiox-glow w-[28rem] h-[28rem] bg-raiox-600/10 top-0 left-1/2 -translate-x-1/2"></div>
+
+      <div className="relative container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8" data-testid="about-title">
+          <Reveal as="div" className="text-center mb-20">
+            <span className="raiox-chip mb-6">
+              <span className="raiox-chip-dot"></span>
+              Equipe
+            </span>
+            <h2 className="text-5xl md:text-6xl font-black text-white mb-8 mt-6" data-testid="about-title">
               Conheça os Profissionais
             </h2>
-            <p className="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Nosso compromisso é eternizar sua história com arte de alto nível, 
+            <p className="text-xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
+              Nosso compromisso é eternizar sua história com arte de alto nível,
               em um espaço seguro e acolhedor
             </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-2 gap-12 mb-20">
+          </Reveal>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
             {/* Perfil do Coringa */}
-            <div className="bg-white p-10 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <Reveal as="div" className="raiox-card p-10 rounded-2xl">
               <div className="flex items-center mb-8">
-                <div className="w-24 h-24 rounded-full overflow-hidden mr-6 border-4 border-orange-500 shadow-lg">
-                  <img 
-                    src="/images/logo/coringa.png" 
+                <div className="w-24 h-24 rounded-full overflow-hidden mr-6 border-2 border-raiox-500/50 shadow-lg">
+                  <img
+                    src="/images/logo/coringa.png"
                     alt="Coringa - Tatuador Fundador"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-gray-900">Coringa</h3>
-                  <p className="text-orange-600 font-bold text-lg">Tatuador Fundador</p>
+                  <h3 className="text-3xl font-bold text-white">Coringa</h3>
+                  <p className="text-raiox-400 font-bold text-lg">Tatuador Fundador</p>
                   <div className="flex items-center gap-2 text-gray-500 mt-2">
                     <Clock size={16} />
-                    <span className="font-medium">15+ anos de experiência</span>
+                    <span className="font-medium text-sm">15+ anos de experiência</span>
                   </div>
                 </div>
               </div>
-              
-              <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                O Coringa é especialista em tatuagens autorais que unem emoção e identidade. 
-                Tatuador fundador do estúdio, conhecido pelo traço firme e pela criatividade ousada. 
-                Construiu sua trajetória no mundo da tatuagem com a ideia de que cada desenho 
+
+              <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                O Coringa é especialista em tatuagens autorais que unem emoção e identidade.
+                Tatuador fundador do estúdio, conhecido pelo traço firme e pela criatividade ousada.
+                Construiu sua trajetória no mundo da tatuagem com a ideia de que cada desenho
                 começa mais do que apenas memória - é identidade e expressão de vida.
               </p>
-              
+
               <div className="mb-8">
-                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">
-                  <Zap className="text-orange-500" size={20} />
+                <h4 className="font-bold text-white mb-4 flex items-center gap-2 text-lg">
+                  <Zap className="text-raiox-400" size={20} />
                   Especialidades
                 </h4>
                 <div className="flex flex-wrap gap-3">
                   {['Realismo', 'Blackwork', 'Criação Artística', 'Designs Exclusivos'].map((skill, idx) => (
-                    <span key={idx} className="bg-orange-100 text-orange-800 px-4 py-2 rounded-full text-sm font-semibold">
+                    <span key={idx} className="bg-raiox-500/10 text-raiox-400 border border-raiox-500/30 px-4 py-2 rounded-full text-sm font-semibold">
                       {skill}
                     </span>
                   ))}
                 </div>
               </div>
-              
-              <div className="flex justify-between text-center border-t pt-8">
+
+              <div className="raiox-hairline mb-6"></div>
+              <div className="flex justify-between text-center">
                 <div>
-                  <div className="text-3xl font-bold text-orange-600">1000+</div>
-                  <div className="text-gray-500 font-medium">Trabalhos</div>
+                  <div className="text-3xl font-black text-raiox-400">1000+</div>
+                  <div className="text-gray-500 font-medium text-sm">Trabalhos</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-600">100%</div>
-                  <div className="text-gray-500 font-medium">Satisfação</div>
+                  <div className="text-3xl font-black text-raiox-400">100%</div>
+                  <div className="text-gray-500 font-medium text-sm">Satisfação</div>
                 </div>
               </div>
-            </div>
-            
+            </Reveal>
+
             {/* Perfil da Jennyfer */}
-            <div className="bg-gray-900 text-white p-10 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <Reveal as="div" delay={150} className="raiox-card p-10 rounded-2xl">
               <div className="flex items-center mb-8">
-                <div className="w-24 h-24 rounded-full overflow-hidden mr-6 border-4 border-orange-500 shadow-lg">
-                  <img 
-                    src="/images/logo/jennyfer-perfil.png" 
+                <div className="w-24 h-24 rounded-full overflow-hidden mr-6 border-2 border-raiox-500/50 shadow-lg">
+                  <img
+                    src="/images/logo/jennyfer-perfil.png"
                     alt="Jennyfer - Body Piercer"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white">Jennyfer</h3>
-                  <p className="text-orange-400 font-bold text-lg">Body Piercer</p>
-                  <div className="flex items-center gap-2 text-gray-400 mt-2">
+                  <p className="text-raiox-400 font-bold text-lg">Body Piercer</p>
+                  <div className="flex items-center gap-2 text-gray-500 mt-2">
                     <Clock size={16} />
-                    <span className="font-medium">8+ anos de experiência</span>
+                    <span className="font-medium text-sm">8+ anos de experiência</span>
                   </div>
                 </div>
               </div>
-              
-              <p className="text-gray-300 text-lg leading-relaxed mb-8">
-                Jennyfer é body piercer com formação em saúde, que garante 
-                estética e cuidado em cada procedimento. Body piercer altamente qualificada, 
-                traz não apenas técnica impecável, mas também uma formação sólida na área da saúde, 
+
+              <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                Jennyfer é body piercer com formação em saúde, que garante
+                estética e cuidado em cada procedimento. Body piercer altamente qualificada,
+                traz não apenas técnica impecável, mas também uma formação sólida na área da saúde,
                 garantindo segurança e confiança em cada procedimento.
               </p>
-              
+
               <div className="mb-8">
                 <h4 className="font-bold text-white mb-4 flex items-center gap-2 text-lg">
-                  <Heart className="text-orange-500" size={20} />
+                  <Heart className="text-raiox-400" size={20} />
                   Especialidades
                 </h4>
                 <div className="flex flex-wrap gap-3">
                   {['Piercing Corporal', 'Técnicas de Saúde', 'Procedimentos Seguros', 'Cuidados Pós-Piercing'].map((skill, idx) => (
-                    <span key={idx} className="bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full text-sm font-semibold border border-orange-500/30">
+                    <span key={idx} className="bg-raiox-500/10 text-raiox-400 border border-raiox-500/30 px-4 py-2 rounded-full text-sm font-semibold">
                       {skill}
                     </span>
                   ))}
                 </div>
               </div>
-              
-              <div className="flex justify-between text-center border-t border-gray-700 pt-8">
+
+              <div className="raiox-hairline mb-6"></div>
+              <div className="flex justify-between text-center">
                 <div>
-                  <div className="text-3xl font-bold text-orange-400">500+</div>
-                  <div className="text-gray-400 font-medium">Trabalhos</div>
+                  <div className="text-3xl font-black text-raiox-400">500+</div>
+                  <div className="text-gray-500 font-medium text-sm">Trabalhos</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-400">100%</div>
-                  <div className="text-gray-400 font-medium">Satisfação</div>
+                  <div className="text-3xl font-black text-raiox-400">100%</div>
+                  <div className="text-gray-500 font-medium text-sm">Satisfação</div>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
-          
-          {/* Estatísticas Gerais */}
-          <div className="bg-orange-600 text-white p-16 rounded-2xl shadow-xl">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+
+          {/* Estatísticas Gerais - painel dashboard */}
+          <Reveal as="div" className="raiox-panel rounded-2xl p-12 md:p-16">
+            <div className="raiox-scanline"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative">
               <div>
-                <div className="text-5xl font-bold mb-4">1500+</div>
-                <div className="text-orange-100 font-medium text-lg">Tatuagens Realizadas</div>
+                <div className="text-5xl font-black text-raiox-400 mb-3">1500+</div>
+                <div className="text-gray-400 font-medium text-lg">Tatuagens Realizadas</div>
               </div>
               <div>
-                <div className="text-5xl font-bold mb-4">15</div>
-                <div className="text-orange-100 font-medium text-lg">Anos de Estúdio</div>
+                <div className="text-5xl font-black text-raiox-400 mb-3">15</div>
+                <div className="text-gray-400 font-medium text-lg">Anos de Estúdio</div>
               </div>
               <div>
-                <div className="text-5xl font-bold mb-4">2</div>
-                <div className="text-orange-100 font-medium text-lg">Profissionais</div>
+                <div className="text-5xl font-black text-raiox-400 mb-3">2</div>
+                <div className="text-gray-400 font-medium text-lg">Profissionais</div>
               </div>
               <div>
-                <div className="text-5xl font-bold mb-4">100%</div>
-                <div className="text-orange-100 font-medium text-lg">Materiais Esterilizados</div>
+                <div className="text-5xl font-black text-raiox-400 mb-3">100%</div>
+                <div className="text-gray-400 font-medium text-lg">Materiais Esterilizados</div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -371,81 +484,90 @@ const ServicesSection = () => {
   ];
   
   return (
-    <section id="servicos" className="py-24 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8" data-testid="services-title">
+    <section id="servicos" className="relative py-24 bg-gray-950 overflow-hidden">
+      <div className="absolute inset-0 raiox-grid-bg opacity-30"></div>
+      <div className="relative container mx-auto px-4">
+        <Reveal as="div" className="text-center mb-20">
+          <span className="raiox-chip mb-6">
+            <span className="raiox-chip-dot"></span>
+            O que fazemos
+          </span>
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 mt-6" data-testid="services-title">
             Nossos Serviços
           </h2>
-          <p className="text-2xl text-gray-600 max-w-4xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-4xl mx-auto">
             Oferecemos uma gama completa de serviços para transformar sua visão em realidade
           </p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        </Reveal>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {services.map((service, index) => (
-            <div key={index} className={`bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:scale-105 ${service.featured ? 'ring-4 ring-orange-500 ring-opacity-50' : ''}`} data-testid={`service-card-${index}`}>
+            <Reveal key={index} delay={index * 100} className={`raiox-card rounded-2xl overflow-hidden ${service.featured ? 'ring-1 ring-raiox-500/60' : ''}`}>
+              <div data-testid={`service-card-${index}`}>
               {service.featured && (
-                <div className="bg-orange-500 text-white text-center py-3 font-bold text-sm">
+                <div className="bg-raiox-500 text-black text-center py-2 font-black text-xs tracking-widest">
                   DESTAQUE
                 </div>
               )}
-              <img
-                src={service.image}
-                alt={service.title}
-                className="w-full h-56 object-cover"
-              />
+              <div className="relative overflow-hidden">
+                <img
+                  src={service.image}
+                  alt={service.title}
+                  className="w-full h-56 object-cover transition-transform duration-500 hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+              </div>
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
-                <p className="text-gray-600 mb-6 text-lg">{service.description}</p>
+                <h3 className="text-2xl font-bold text-white mb-4">{service.title}</h3>
+                <p className="text-gray-400 mb-6">{service.description}</p>
                 <div className="space-y-3 mb-8">
                   {service.highlights.map((highlight, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-gray-700">
-                      <CheckCircle size={16} className="text-orange-500 flex-shrink-0" />
-                      <span>{highlight}</span>
+                    <div key={idx} className="flex items-center gap-3 text-gray-300">
+                      <CheckCircle size={16} className="text-raiox-400 flex-shrink-0" />
+                      <span className="text-sm">{highlight}</span>
                     </div>
                   ))}
                 </div>
                 <a
-                  href="https://wa.me/5511939369778?text=Olá! Gostaria de solicitar orçamento"
+                  href="https://wa.me/5511926355407?text=Olá! Gostaria de solicitar orçamento"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-6 rounded-lg font-bold transition-colors duration-300 text-center block"
+                  className="w-full bg-raiox-500 hover:bg-raiox-400 text-black py-3 px-6 rounded-lg font-bold transition-colors duration-300 text-center block"
                 >
                   Solicitar Orçamento
                 </a>
               </div>
-            </div>
+              </div>
+            </Reveal>
           ))}
         </div>
-        
-        <div className="text-center">
-          <div className="bg-gray-100 p-12 rounded-2xl inline-block max-w-6xl">
-            <h3 className="text-3xl font-bold text-gray-900 mb-8">Como Funciona</h3>
-            <div className="grid md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl">1</div>
-                <h4 className="font-bold text-gray-900 mb-3 text-lg">Consulta</h4>
-                <p className="text-gray-600">Conversa inicial sobre sua ideia</p>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl">2</div>
-                <h4 className="font-bold text-gray-900 mb-3 text-lg">Design</h4>
-                <p className="text-gray-600">Criação do desenho personalizado</p>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl">3</div>
-                <h4 className="font-bold text-gray-900 mb-3 text-lg">Aprovação</h4>
-                <p className="text-gray-600">Ajustes e aprovação final</p>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-2xl">4</div>
-                <h4 className="font-bold text-gray-900 mb-3 text-lg">Execução</h4>
-                <p className="text-gray-600">Realização da tatuagem</p>
-              </div>
+
+        <Reveal as="div" className="raiox-panel rounded-2xl p-10 md:p-14 max-w-6xl mx-auto">
+          <div className="raiox-scanline"></div>
+          <h3 className="text-3xl font-bold text-white mb-10 text-center relative">Como Funciona</h3>
+          <div className="grid md:grid-cols-4 gap-8 text-center relative">
+            <div>
+              <div className="w-16 h-16 bg-raiox-500/10 border border-raiox-500/40 text-raiox-400 rounded-full flex items-center justify-center mx-auto mb-4 font-black text-2xl">1</div>
+              <h4 className="font-bold text-white mb-3 text-lg">Consulta</h4>
+              <p className="text-gray-500 text-sm">Conversa inicial sobre sua ideia</p>
+            </div>
+            <div>
+              <div className="w-16 h-16 bg-raiox-500/10 border border-raiox-500/40 text-raiox-400 rounded-full flex items-center justify-center mx-auto mb-4 font-black text-2xl">2</div>
+              <h4 className="font-bold text-white mb-3 text-lg">Design</h4>
+              <p className="text-gray-500 text-sm">Criação do desenho personalizado</p>
+            </div>
+            <div>
+              <div className="w-16 h-16 bg-raiox-500/10 border border-raiox-500/40 text-raiox-400 rounded-full flex items-center justify-center mx-auto mb-4 font-black text-2xl">3</div>
+              <h4 className="font-bold text-white mb-3 text-lg">Aprovação</h4>
+              <p className="text-gray-500 text-sm">Ajustes e aprovação final</p>
+            </div>
+            <div>
+              <div className="w-16 h-16 bg-raiox-500/10 border border-raiox-500/40 text-raiox-400 rounded-full flex items-center justify-center mx-auto mb-4 font-black text-2xl">4</div>
+              <h4 className="font-bold text-white mb-3 text-lg">Execução</h4>
+              <p className="text-gray-500 text-sm">Realização da tatuagem</p>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -487,28 +609,32 @@ const PortfolioSection = () => {
   };
 
   return (
-    <section id="portfolio" className="py-24 bg-gray-900">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-8" data-testid="portfolio-title">
+    <section id="portfolio" className="relative py-24 bg-black overflow-hidden">
+      <div className="absolute inset-0 raiox-grid-bg opacity-30"></div>
+      <div className="relative container mx-auto px-4">
+        <Reveal as="div" className="text-center mb-20">
+          <span className="raiox-chip mb-6">
+            <span className="raiox-chip-dot"></span>
+            Trabalhos reais
+          </span>
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 mt-6" data-testid="portfolio-title">
             Portfolio
           </h2>
-          <p className="text-2xl text-gray-400 max-w-4xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-4xl mx-auto">
             Alguns dos nossos trabalhos realizados ao longo desses 15 anos
           </p>
-          <p className="text-lg text-orange-400 mt-4 font-semibold">
+          <p className="text-lg text-raiox-400 mt-4 font-semibold">
             Clique nas imagens para ver em tamanho grande
           </p>
-        </div>
-        
+        </Reveal>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {portfolioImages.map((image, index) => (
-            <div 
-              key={index} 
-              className="group relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer" 
-              data-testid={`portfolio-item-${index}`}
-              onClick={() => openModal(image)}
-            >
+            <Reveal key={index} delay={(index % 4) * 100} className="group relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer">
+              <div
+                data-testid={`portfolio-item-${index}`}
+                onClick={() => openModal(image)}
+              >
               <img
                 src={image.src}
                 alt={image.alt}
@@ -516,7 +642,7 @@ const PortfolioSection = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-6 left-6 text-white">
-                  <span className="text-sm font-bold bg-orange-500 px-3 py-1 rounded-full">{image.category}</span>
+                  <span className="text-sm font-bold bg-raiox-500 px-3 py-1 rounded-full">{image.category}</span>
                   <p className="text-sm mt-2">{image.alt}</p>
                 </div>
                 <div className="absolute top-4 right-4">
@@ -525,7 +651,8 @@ const PortfolioSection = () => {
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </Reveal>
           ))}
         </div>
         
@@ -579,90 +706,96 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contato" className="py-24 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8" data-testid="contact-title">
+    <section id="contato" className="relative py-24 bg-gray-950 overflow-hidden">
+      <div className="absolute inset-0 raiox-grid-bg opacity-30"></div>
+      <div className="relative container mx-auto px-4">
+        <Reveal as="div" className="text-center mb-20">
+          <span className="raiox-chip mb-6">
+            <span className="raiox-chip-dot"></span>
+            Fale com a gente
+          </span>
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 mt-6" data-testid="contact-title">
             Entre em Contato
           </h2>
-          <p className="text-2xl text-gray-600 max-w-4xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-4xl mx-auto">
             Agende sua consulta e transforme sua ideia em arte
           </p>
-        </div>
-        
-        <div className="grid lg:grid-cols-2 gap-16 max-w-7xl mx-auto">
+        </Reveal>
+
+        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Informações de Contato SIMPLIFICADAS */}
-          <div className="space-y-8">
-            <div className="bg-white p-10 rounded-2xl shadow-xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <MapPin className="text-orange-500" size={28} />
+          <Reveal as="div" className="space-y-6">
+            <div className="raiox-card p-10 rounded-2xl">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <MapPin className="text-raiox-400" size={28} />
                 Como Chegar
               </h3>
-              <div className="space-y-4 text-gray-700 text-lg">
-                <p className="font-bold text-xl">Tattoo Até os Ossos</p>
+              <div className="space-y-3 text-gray-400 text-lg">
+                <p className="font-bold text-xl text-white">Tattoo Até os Ossos</p>
                 <p>Rua Monsenhor Pio Ragazinskas, 15 - Sobreloja</p>
                 <p>Vila Zelina/Vila Prudente - São Paulo - SP</p>
-                <p>CEP: 03142-000</p>
+                <p>CEP: 03141-090</p>
               </div>
-              <div className="mt-6 p-4 bg-orange-50 rounded-lg">
-                <p className="text-orange-800"><strong>🚇 Transporte Público:</strong> Próximo à estação Vila Prudente do Metrô (Linha Azul)</p>
+              <div className="mt-6 p-4 bg-raiox-500/10 border border-raiox-500/20 rounded-lg">
+                <p className="text-raiox-300"><strong>🚇 Transporte Público:</strong> Próximo à estação Vila Prudente do Metrô (Linha Azul)</p>
               </div>
             </div>
-            
-            <div className="bg-white p-10 rounded-2xl shadow-xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <Clock className="text-orange-500" size={28} />
+
+            <div className="raiox-card p-10 rounded-2xl">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <Clock className="text-raiox-400" size={28} />
                 Horário de Funcionamento
               </h3>
-              <div className="space-y-4 text-gray-700 text-lg">
-                <div className="flex justify-between py-3 border-b border-gray-100">
-                  <span className="font-semibold">Segunda - Sexta:</span>
-                  <span>13:30 - 19:00</span>
+              <div className="space-y-4 text-gray-400 text-lg">
+                <div className="flex justify-between py-3 border-b border-white/10">
+                  <span className="font-semibold text-gray-300">Segunda - Sábado:</span>
+                  <span>10:00 - 20:00</span>
                 </div>
-                <div className="flex justify-between py-3 border-b border-gray-100">
-                  <span className="font-semibold">Sábado:</span>
-                  <span>10:00 - 17:00</span>
+                <div className="flex justify-between py-3 border-b border-white/10">
+                  <span className="font-semibold text-gray-300">Intervalo de almoço:</span>
+                  <span>12:00 - 13:00</span>
                 </div>
                 <div className="flex justify-between py-3">
-                  <span className="font-semibold">Domingo:</span>
-                  <span className="text-red-600 font-semibold">Fechado</span>
+                  <span className="font-semibold text-gray-300">Domingo:</span>
+                  <span className="text-red-400 font-semibold">Fechado</span>
                 </div>
               </div>
-              <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                <p className="text-green-800"><strong>✅ Atendimento por agendamento via WhatsApp</strong></p>
+              <div className="mt-6 p-4 bg-raiox-500/10 border border-raiox-500/20 rounded-lg">
+                <p className="text-raiox-300"><strong>✅ Atendimento por agendamento via WhatsApp</strong></p>
               </div>
             </div>
-            
+
             {/* CONTATO DIRETO SIMPLIFICADO - só Instagram e WhatsApp */}
-            <div className="bg-white p-10 rounded-2xl shadow-xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Contato Direto</h3>
-              <div className="space-y-6">
-                <a href="https://wa.me/5511939369778" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                  <Phone className="text-green-500" size={24} />
+            <div className="raiox-card p-10 rounded-2xl">
+              <h3 className="text-2xl font-bold text-white mb-6">Contato Direto</h3>
+              <div className="space-y-4">
+                <a href="https://wa.me/5511939369778" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-lg hover:border-raiox-500/50 transition-colors">
+                  <Phone className="text-raiox-400" size={24} />
                   <div>
-                    <p className="font-semibold text-gray-900">(11) 93936-9778</p>
-                    <p className="text-sm text-gray-600">WhatsApp Business</p>
+                    <p className="font-semibold text-white">(11) 93936-9778</p>
+                    <p className="text-sm text-gray-500">WhatsApp Business</p>
                   </div>
                 </a>
-                <a href="https://instagram.com/tattooateosossos" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                  <Instagram className="text-purple-500" size={24} />
+                <a href="https://instagram.com/tattooateosossos" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-lg hover:border-raiox-500/50 transition-colors">
+                  <Instagram className="text-raiox-400" size={24} />
                   <div>
-                    <p className="font-semibold text-gray-900">@tattooateosossos</p>
-                    <p className="text-sm text-gray-600">Instagram</p>
+                    <p className="font-semibold text-white">@tattooateosossos</p>
+                    <p className="text-sm text-gray-500">Instagram</p>
                   </div>
                 </a>
               </div>
             </div>
-          </div>
-          
+          </Reveal>
+
           {/* Formulário de Contato */}
-          <div className="bg-white p-10 rounded-2xl shadow-xl">
-            <h3 className="text-3xl font-bold text-gray-900 mb-8">Solicite uma Consulta</h3>
-            <p className="text-gray-600 mb-8 text-lg">Preencha o formulário e entraremos em contato via WhatsApp</p>
-            
-            <form onSubmit={handleSubmit} className="space-y-6" data-testid="contact-form">
+          <Reveal as="div" delay={150} className="raiox-panel rounded-2xl p-10 h-fit">
+            <div className="raiox-scanline"></div>
+            <h3 className="text-3xl font-bold text-white mb-3 relative">Solicite uma Consulta</h3>
+            <p className="text-gray-400 mb-8 text-lg relative">Preencha o formulário e entraremos em contato via WhatsApp</p>
+
+            <form onSubmit={handleSubmit} className="space-y-6 relative" data-testid="contact-form">
               <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-300 mb-2">
                   Nome Completo *
                 </label>
                 <input
@@ -673,13 +806,13 @@ const ContactSection = () => {
                   onChange={handleChange}
                   required
                   placeholder="Digite seu nome completo"
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                  className="w-full px-4 py-4 bg-black/40 border border-white/15 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-raiox-500 focus:border-raiox-500 text-lg"
                   data-testid="contact-name-input"
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-2">
                   Email *
                 </label>
                 <input
@@ -690,13 +823,13 @@ const ContactSection = () => {
                   onChange={handleChange}
                   required
                   placeholder="seu@email.com"
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                  className="w-full px-4 py-4 bg-black/40 border border-white/15 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-raiox-500 focus:border-raiox-500 text-lg"
                   data-testid="contact-email-input"
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="phone" className="block text-sm font-semibold text-gray-300 mb-2">
                   WhatsApp *
                 </label>
                 <input
@@ -707,13 +840,13 @@ const ContactSection = () => {
                   onChange={handleChange}
                   required
                   placeholder="(11) 99999-9999"
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                  className="w-full px-4 py-4 bg-black/40 border border-white/15 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-raiox-500 focus:border-raiox-500 text-lg"
                   data-testid="contact-phone-input"
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="service" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="service" className="block text-sm font-semibold text-gray-300 mb-2">
                   Serviço Desejado *
                 </label>
                 <select
@@ -722,7 +855,7 @@ const ContactSection = () => {
                   value={formData.service}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                  className="w-full px-4 py-4 bg-black/40 border border-white/15 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-raiox-500 focus:border-raiox-500 text-lg"
                   data-testid="contact-service-select"
                 >
                   <option value="">Escolha um serviço</option>
@@ -735,9 +868,9 @@ const ContactSection = () => {
                   <option value="Consulta Geral">Consulta Geral</option>
                 </select>
               </div>
-              
+
               <div>
-                <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="message" className="block text-sm font-semibold text-gray-300 mb-2">
                   Descreva sua ideia
                 </label>
                 <textarea
@@ -746,26 +879,26 @@ const ContactSection = () => {
                   value={formData.message}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                  className="w-full px-4 py-4 bg-black/40 border border-white/15 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-raiox-500 focus:border-raiox-500 text-lg"
                   placeholder="Conte-nos sobre sua ideia, estilo desejado, tamanho, localização no corpo..."
                   data-testid="contact-message-textarea"
                 ></textarea>
               </div>
-              
+
               <button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-5 px-6 rounded-lg font-bold text-xl transition-all duration-300 flex items-center justify-center gap-3 shadow-xl"
+                className="w-full bg-raiox-500 hover:bg-raiox-400 text-black py-5 px-6 rounded-lg font-bold text-xl transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_0_40px_-10px_rgba(57,255,106,0.6)]"
                 data-testid="contact-submit-button"
               >
                 <MessageCircle size={24} />
                 Enviar via WhatsApp
               </button>
-              
+
               <p className="text-sm text-gray-500 text-center">
                 Ao enviar, você será redirecionado para o WhatsApp com suas informações preenchidas
               </p>
             </form>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -788,7 +921,7 @@ const Footer = () => {
                   className="w-16 h-16 rounded-full bg-white/10 p-2"
                 />
                 <div>
-                  <h3 className="text-3xl font-bold text-orange-500">TAO</h3>
+                  <h3 className="text-3xl font-bold text-raiox-500">TAO</h3>
                   <p className="text-gray-400">Tattoo até os Ossos</p>
                 </div>
               </div>
@@ -796,7 +929,7 @@ const Footer = () => {
                 Transformamos ideias em arte permanente. Especialistas em tatuagens artísticas, 
                 realismo, blackwork e piercing profissional na Vila Zelina, São Paulo.
               </p>
-              <p className="text-orange-400 font-bold text-lg">Arte que marca para sempre</p>
+              <p className="text-raiox-400 font-bold text-lg">Arte que marca para sempre</p>
               
               {/* Redes Sociais */}
               <div className="flex gap-4 mt-6">
@@ -822,26 +955,26 @@ const Footer = () => {
             </div>
             
             <div>
-              <h4 className="text-xl font-bold mb-6 text-orange-500">Serviços</h4>
+              <h4 className="text-xl font-bold mb-6 text-raiox-500">Serviços</h4>
               <ul className="space-y-3 text-gray-400">
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Tatuagens Artísticas</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Realismo</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Blackwork</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Fino Traço</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Pinturas Digitais</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Piercing</a></li>
-                <li><a href="#servicos" className="hover:text-orange-400 transition-colors">Cover Up</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Tatuagens Artísticas</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Realismo</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Blackwork</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Fino Traço</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Pinturas Digitais</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Piercing</a></li>
+                <li><a href="#servicos" className="hover:text-raiox-400 transition-colors">Cover Up</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-xl font-bold mb-6 text-orange-500">Contato</h4>
+              <h4 className="text-xl font-bold mb-6 text-raiox-500">Contato</h4>
               <div className="space-y-3 text-gray-400">
                 <p>(11) 93936-9778</p>
                 <p>@tattooateosossos</p>
                 <p>Rua Monsenhor Pio Ragazinskas, 15</p>
                 <p>Vila Zelina - São Paulo - SP</p>
-                <p className="text-orange-400 font-semibold">Seg-Sex: 13:30-19h | Sáb: 10h-17h</p>
+                <p className="text-raiox-400 font-semibold">Seg-Sáb: 10h-20h (almoço 12h-13h)</p>
               </div>
             </div>
           </div>
@@ -856,8 +989,8 @@ const Footer = () => {
               © 2024 Tattoo Até os Ossos LTDA. Todos os direitos reservados.
             </p>
             <div className="flex flex-wrap gap-6 text-sm">
-              <a href="/termos.html" className="text-gray-400 hover:text-orange-400 transition-colors">Termos de Uso</a>
-              <a href="/privacidade.html" className="text-gray-400 hover:text-orange-400 transition-colors">Política de Privacidade</a>
+              <a href="/termos.html" className="text-gray-400 hover:text-raiox-400 transition-colors">Termos de Uso</a>
+              <a href="/privacidade.html" className="text-gray-400 hover:text-raiox-400 transition-colors">Política de Privacidade</a>
             </div>
           </div>
         </div>
