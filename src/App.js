@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { MapPin, Phone, Clock, Instagram, Star, Zap, Shield, Heart, Mail, User, MessageCircle, Menu, X, ChevronDown, CheckCircle } from 'lucide-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+import { MapPin, Phone, Clock, Instagram, Star, Zap, Shield, Heart, MessageCircle, Menu, X, CheckCircle } from 'lucide-react';
 
 // Componente que revela seus filhos com uma animação suave (fade + slide)
 // assim que entram na tela — dá movimento à página sem depender de nada externo.
