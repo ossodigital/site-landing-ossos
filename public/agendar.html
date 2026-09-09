@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ea580c" />
+    
+    <!-- SEO Meta Tags (Herança do seu Index) -->
+    <title>Agendamento | Tattoo até os Ossos - Vila Prudente SP</title>
+    <meta name="description" content="Agende sua consulta de tatuagem ou piercing com Coringa & Jennyfer no estúdio Tattoo até os Ossos em Vila Prudente, SP. Designs exclusivos e atendimento profissional." />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="https://www.tattooateosossos.com.br/agendar.html" />
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Efeito de foco laranja */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.5);
+            border-color: #ea580c;
+        }
+    </style>
+    
+    <!-- Firebase Imports -->
+    <script type="module">
+        // Importa as funções necessárias do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+        // =========================================================================================
+        // CONFIGURAÇÃO DO FIREBASE: CHAVE API INSERIDA
+        // =========================================================================================
+        const config = {
+            // Sua chave de API que você criou no Google Cloud
+            apiKey: "AIzaSyD4j5TykObT74CTDErbfZ5gX2YdFnAnqXU", 
+            
+            // O RESTO É O PADRÃO DO SEU PROJETO 'distributed-amp-461017-m6'
+            authDomain: "distributed-amp-461017-m6.firebaseapp.com", 
+            projectId: "distributed-amp-461017-m6", 
+        };
+        // =========================================================================================
+
+
+        // Usamos o projectId como appId para o path da coleção.
+        const appId = config.projectId; 
+        
+        let db, auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // Função de Inicialização do Firebase e Autenticação
+        const initFirebase = async () => {
+            try {
+                //setLogLevel('Debug'); // Descomente para ver logs de debug no console
+
+                if (!config.apiKey || config.apiKey.includes('COLE_AQUI')) {
+                    // Lança um erro se as credenciais não foram preenchidas corretamente
+                    throw new Error("Configuração do Firebase ausente.");
+                }
+
+                const app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Força o login anónimo (suficiente para enviar dados públicos)
+                const userCredential = await signInAnonymously(auth);
+                userId = userCredential.user.uid;
+                isAuthReady = true;
+
+                console.log("Firebase e Autenticação prontos. User ID:", userId);
+                // Habilita o botão e esconde a mensagem de carregamento
+                document.getElementById('submit-button').disabled = false;
+                document.getElementById('form-feedback').className = 'hidden';
+
+
+            } catch (error) {
+                console.error("Erro na inicialização do Firebase:", error);
+                const feedbackDiv = document.getElementById('form-feedback');
+                
+                // --- Ajuste para dar feedback mais útil sobre o erro de API ---
+                let errorMessage = `Erro ao carregar o sistema: ${error.message}. O formulário está indisponível.`;
+
+                if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project') {
+                    errorMessage = `ERRO DE CONFIGURAÇÃO! A 'Identity Toolkit API' precisa ser ATIVADA no seu Google Cloud Console. Por favor, ative a API e recarregue a página.`;
+                }
+
+                feedbackDiv.textContent = errorMessage;
+                // -----------------------------------------------------------------
+
+                feedbackDiv.className = 'p-3 bg-red-800 text-white rounded-lg text-center font-bold';
+                document.getElementById('submit-button').disabled = true; // Desabilita o botão
+            }
+        };
+
+        // Função de Envio do Formulário
+        window.handleSubmit = async (event) => {
+            event.preventDefault();
+            
+            const submitButton = document.getElementById('submit-button');
+            const feedbackDiv = document.getElementById('form-feedback');
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
+            feedbackDiv.textContent = ''; 
+            feedbackDiv.className = 'hidden';
+
+            // VERIFICAÇÃO ADICIONAL: Garante que o Auth e DB estão prontos e o userId existe.
+            if (!isAuthReady || !db || !userId) {
+                feedbackDiv.textContent = 'O sistema ainda não está pronto ou houve falha na autenticação. Por favor, recarregue a página.';
+                feedbackDiv.className = 'p-3 bg-yellow-600 text-white rounded-lg text-center';
+                submitButton.disabled = false;
+                submitButton.textContent = 'AGENDAR AGORA';
+                return;
+            }
+
+            // Captura os valores do formulário
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const service = document.getElementById('service').value;
+            const description = document.getElementById('description').value;
+
+            // Objeto de dados (Lead) para salvar no Firestore
+            const leadData = {
+                name,
+                email,
+                whatsapp,
+                service,
+                description,
+                timestamp: serverTimestamp(), 
+                userId_creator: userId, 
+                status: 'Novo', 
+                source: 'Site Agendamento' 
+            };
+
+            try {
+                // Caminho da Coleção para dados públicos: /artifacts/{appId}/public/data/leads
+                const leadsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'leads');
+                await addDoc(leadsCollection, leadData);
+
+                // Sucesso
+                feedbackDiv.textContent = 'SUCESSO! Sua consulta foi agendada. Entraremos em contacto em breve via WhatsApp.';
+                feedbackDiv.className = 'p-4 bg-green-600 text-white rounded-lg text-center font-bold text-lg';
+                document.getElementById('booking-form').reset(); 
+                
+                // Rola para mostrar a mensagem de sucesso
+                feedbackDiv.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (e) {
+                console.error("Erro ao salvar o agendamento:", e);
+                // O erro mais comum aqui será a falha de segurança (regras)
+                feedbackDiv.textContent = `Erro ao agendar: Falha no sistema. Verifique se as Regras de Segurança do Firestore foram publicadas corretamente.`;
+                feedbackDiv.className = 'p-3 bg-red-800 text-white rounded-lg text-center font-bold';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'AGENDAR AGORA';
+            }
+        };
+
+        // Inicia o Firebase ao carregar a página
+        window.onload = initFirebase;
+
+    </script>
+
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Container Principal -->
+    <div class="max-w-xl w-full bg-gray-800 shadow-2xl rounded-xl overflow-hidden p-6 md:p-10 border-t-4 border-orange-500">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-orange-500 mb-2">Agende Sua Consulta</h1>
+            <p class="text-gray-400 text-lg">Preencha o formulário e reserve seu horário com o Coringa ou a Jennyfer. Entraremos em contacto via WhatsApp.</p>
+        </header>
+
+        <!-- Mensagem de Feedback (Sucesso/Erro/Carregando) -->
+        <div id="form-feedback" class="p-4 bg-yellow-600 text-white rounded-lg text-center font-bold text-lg">
+            Carregando sistema de agendamento...
+        </div>
+        
+        <!-- Formulário de Agendamento -->
+        <form id="booking-form" onsubmit="handleSubmit(event)" class="space-y-6">
+            
+            <!-- Nome Completo -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Nome Completo *</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 transition duration-300 focus:ring-2 focus:ring-orange-500"
+                    placeholder="Seu nome completo"
+                />
+            </div>
+
+            <!-- E-mail -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">E-mail *</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 transition duration-300 focus:ring-2 focus:ring-orange-500"
+                    placeholder="exemplo@email.com"
+                />
+            </div>
+
+            <!-- WhatsApp -->
+            <div>
+                <label for="whatsapp" class="block text-sm font-medium text-gray-300 mb-1">WhatsApp (com DDD) *</label>
+                <input 
+                    type="tel" 
+                    id="whatsapp" 
+                    name="whatsapp" 
+                    required 
+                    pattern="[0-9]{10,11}" 
+                    title="Apenas números, inclua DDD (Ex: 11987654321)"
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 transition duration-300 focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 11987654321"
+                />
+            </div>
+            
+            <!-- Serviço Desejado -->
+            <div>
+                <label for="service" class="block text-sm font-medium text-gray-300 mb-1">Serviço Desejado *</label>
+                <select 
+                    id="service" 
+                    name="service" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 transition duration-300 appearance-none focus:ring-2 focus:ring-orange-500"
+                >
+                    <option value="" disabled selected>Selecione uma opção</option>
+                    <option value="Tatuagem - Realismo">Tatuagem - Realismo</option>
+                    <option value="Tatuagem - Blackwork">Tatuagem - Blackwork</option>
+                    <option value="Tatuagem - Fino Traço">Tatuagem - Fino Traço</option>
+                    <option value="Tatuagem - Cover Up">Tatuagem - Cover Up (Cobertura)</option>
+                    <option value="Piercing Profissional">Piercing Profissional</option>
+                    <option value="Outro">Outro (Descreva abaixo)</option>
+                </select>
+            </div>
+
+            <!-- Descrição da Ideia -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Descreva sua ideia/projeto *</label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    rows="4" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 transition duration-300 focus:ring-2 focus:ring-orange-500 resize-none"
+                    placeholder="Ex: Um tigre em preto e cinza no antebraço, estilo realismo. Tenho referências."
+                ></textarea>
+            </div>
+
+            <!-- Botão de Agendar -->
+            <button 
+                id="submit-button"
+                type="submit" 
+                class="w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-orange-600 hover:bg-orange-700 transition duration-300 transform hover:scale-[1.01] disabled:bg-gray-500 disabled:cursor-not-allowed"
+                disabled
+            >
+                AGENDAR AGORA
+            </button>
+            
+            <p class="text-center text-sm text-gray-500 mt-4">
+                * Os seus dados estão seguros. Entraremos em contacto exclusivamente pelo WhatsApp.
+            </p>
+        </form>
+
+    </div>
+</body>
+</html>

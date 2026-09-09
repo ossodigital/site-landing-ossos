@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Agendamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1a27; /* Fundo Escuro */
+            color: #ffffff;
+            padding: 20px;
+        }
+        .container-card {
+            background-color: #1c2b3a; /* Card de fundo */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2b3a4a;
+        }
+        th {
+            background-color: #0d1e2b;
+            color: #ff8a00;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        tr:hover {
+            background-color: #2b3a4a;
+        }
+        /* Estilo do botão de exclusão */
+        .delete-btn {
+            background-color: #dc2626; /* red-600 */
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background-color 0.15s;
+        }
+        .delete-btn:hover {
+            background-color: #b91c1c; /* red-700 */
+        }
+        /* Responsividade para a tabela em ecrãs pequenos */
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            table {
+                min-width: 800px; /* Garante que a tabela não fique esmagada e tenha espaço para o botão */
+            }
+        }
+        /* Estilo para a caixa de diálogo de confirmação */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Inicia oculto */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1c2b3a;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-card">
+    <header class="mb-8">
+        <h1 class="text-4xl font-extrabold text-[#ff8a00] mb-2">Painel de Agendamentos</h1>
+        <p class="text-gray-400">Dados em tempo real da coleção `leads` do Firestore. O caminho da coleção é: <code class="bg-gray-700 p-1 rounded text-sm">artifacts/{appId}/public/data/leads</code></p>
+    </header>
+
+    <!-- Feedback Div -->
+    <div id="status-message" class="p-4 rounded-lg mb-6 bg-blue-700 text-white font-semibold">
+        A carregar dados do Firebase...
+    </div>
+
+    <!-- Tabela de Agendamentos -->
+    <div class="table-container">
+        <table class="w-full border-collapse rounded-lg overflow-hidden">
+            <thead id="table-head">
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>WhatsApp</th>
+                    <th>Serviço</th>
+                    <th>Descrição da Ideia</th>
+                    <th>Data de Envio</th>
+                    <th>Ação</th> <!-- Nova Coluna -->
+                </tr>
+            </thead>
+            <tbody id="leads-table-body">
+                <!-- Linhas de dados serão injetadas aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <p id="empty-state" class="text-center text-gray-500 mt-12 hidden">Nenhum agendamento encontrado.</p>
+</div>
+
+<!-- Caixa de Diálogo de Confirmação (Modal) -->
+<div id="confirm-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4">Confirmar Exclusão</h2>
+        <p class="text-gray-300 mb-6">Tem certeza de que deseja excluir o agendamento para <span id="lead-name-placeholder" class="font-bold text-white"></span>?</p>
+        <div class="flex justify-center space-x-4">
+            <button id="cancel-delete-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors">
+                Cancelar
+            </button>
+            <button id="execute-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                Excluir Permanentemente
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Firebase and App Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+        getFirestore, collection, query, onSnapshot, doc, deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-lite.js";
+    
+    // VARIÁVEIS GLOBAIS DO AMBIENTE
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    const environmentConfig = typeof __firebase_config !== 'undefined' 
+        ? JSON.parse(__firebase_config) 
+        : null;
+
+    // Configuração manual (REMOVIDAS CHAVES DE PLACEHOLDER INVÁLIDAS para evitar o erro auth/api-key-not-valid)
+    const manualFirebaseConfig = {
+        // Apenas uma estrutura mínima, esperando as chaves do ambiente Canvas
+        apiKey: 'API_KEY_REQUIRED', 
+        authDomain: 'PROJECT_ID.firebaseapp.com',
+        projectId: 'PROJECT_ID', 
+        // ... (outras configurações se aplicáveis)
+    };
+
+    // Usa a configuração do ambiente, ou a configuração manual mínima se não estiver disponível
+    const firebaseConfig = environmentConfig || manualFirebaseConfig; 
+    const isCanvasEnvironment = !!environmentConfig; // Verifica se a configuração foi injetada
+
+    // Elementos da UI
+    const statusMessageEl = document.getElementById('status-message');
+    const tableBody = document.getElementById('leads-table-body');
+    const emptyState = document.getElementById('empty-state');
+    const tableHead = document.getElementById('table-head');
+    
+    const confirmModal = document.getElementById('confirm-modal');
+    const leadNamePlaceholder = document.getElementById('lead-name-placeholder');
+    const executeDeleteBtn = document.getElementById('execute-delete-btn');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+
+    // Estado do Firebase
+    let db = null;
+    let auth = null;
+    let isAuthReady = false;
+    let leadToDelete = null; // Armazena o ID do agendamento a ser excluído
+
+    setLogLevel('error'); // Define o nível de log
+
+    /**
+     * Atualiza a mensagem de status na UI.
+     * @param {string} message - A mensagem a ser exibida.
+     * @param {string} className - As classes Tailwind para o estilo.
+     */
+    function updateStatus(message, className) {
+        statusMessageEl.textContent = message;
+        statusMessageEl.className = `p-4 rounded-lg mb-6 font-semibold ${className}`;
+    }
+
+    /**
+     * Converte a data ISO string para formato legível.
+     * @param {string} isoString - Data em formato ISO 8601.
+     * @returns {string} Data e hora formatadas.
+     */
+    function formatTime(isoString) {
+        if (!isoString) return 'N/A';
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString('pt-BR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return isoString;
+        }
+    }
+
+    /**
+     * Tenta excluir um documento do Firestore.
+     * @param {string} docId - O ID do documento a ser excluído.
+     */
+    async function deleteLead(docId) {
+        if (!db) {
+            updateStatus("Erro: Firebase não inicializado.", 'bg-red-700');
+            return;
+        }
+        
+        // Caminho da coleção
+        const collectionPath = `artifacts/${appId}/public/data/leads`;
+        const leadRef = doc(db, collectionPath, docId);
+        
+        try {
+            updateStatus(`A excluir agendamento (ID: ${docId})...`, 'bg-yellow-600');
+            await deleteDoc(leadRef);
+            updateStatus("Agendamento excluído com sucesso!", 'bg-green-700');
+        } catch (error) {
+            console.error("Erro ao excluir documento: ", error);
+            updateStatus(`Erro ao excluir: ${error.message}`, 'bg-red-700');
+        } finally {
+            confirmModal.style.display = 'none'; // Fecha o modal
+        }
+    }
+
+    /**
+     * Abre a caixa de diálogo de confirmação (modal).
+     * @param {string} docId - O ID do documento a ser excluído.
+     * @param {string} leadName - O nome do cliente para exibição.
+     */
+    function showDeleteConfirmation(docId, leadName) {
+        leadToDelete = docId;
+        leadNamePlaceholder.textContent = leadName;
+        confirmModal.style.display = 'flex';
+    }
+
+    // Configuração dos ouvintes do modal
+    executeDeleteBtn.addEventListener('click', () => {
+        if (leadToDelete) {
+            deleteLead(leadToDelete);
+        }
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+        confirmModal.style.display = 'none';
+        leadToDelete = null;
+    });
+
+    /**
+     * Renderiza a tabela com os dados de leads.
+     * @param {Array<Object>} leads - Array de objetos de lead.
+     */
+    function renderLeadsTable(leads) {
+        tableBody.innerHTML = '';
+        if (leads.length === 0) {
+            emptyState.classList.remove('hidden');
+            tableHead.classList.add('hidden');
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        tableHead.classList.remove('hidden');
+
+        leads.forEach(lead => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-[#2b3a4a] transition-colors duration-150';
+
+            const whatsappLink = `https://wa.me/${(lead.whatsapp || '').replace(/\D/g, '')}`;
+
+            row.innerHTML = `
+                <td class="whitespace-nowrap">${lead.name || 'N/A'}</td>
+                <td class="text-gray-400">${lead.email || 'N/A'}</td>
+                <td>
+                    ${lead.whatsapp ? `
+                        <a href="${whatsappLink}" target="_blank" class="text-green-400 hover:text-green-300 flex items-center">
+                            ${lead.whatsapp}
+                            <i data-lucide="message-square" class="w-4 h-4 ml-2"></i>
+                        </a>
+                    ` : 'N/A'}
+                </td>
+                <td class="font-medium text-[#ff8a00]">${lead.serviceType || 'N/A'}</td>
+                <td class="max-w-xs truncate">${lead.description || 'N/A'}</td>
+                <td class="text-sm text-gray-500">${formatTime(lead.submissionTime)}</td>
+                <td>
+                    <button class="delete-btn" data-doc-id="${lead.id}" data-lead-name="${lead.name || 'este agendamento'}">
+                        Excluir
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Adiciona o listener de clique para os botões de exclusão
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const docId = e.target.getAttribute('data-doc-id');
+                const leadName = e.target.getAttribute('data-lead-name');
+                showDeleteConfirmation(docId, leadName);
+            });
+        });
+
+        // Atualiza os ícones do Lucide
+        lucide.createIcons();
+    }
+
+    /**
+     * Define o listener de leitura de dados em tempo real.
+     */
+    function setupRealtimeListener() {
+        const collectionPath = `artifacts/${appId}/public/data/leads`;
+        const leadsCollectionRef = collection(db, collectionPath);
+        
+        const q = query(leadsCollectionRef);
+
+        onSnapshot(q, (snapshot) => {
+            const leads = [];
+            snapshot.forEach((doc) => {
+                leads.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Ordena os leads por data de envio (o mais recente primeiro)
+            leads.sort((a, b) => new Date(b.submissionTime) - new Date(a.submissionTime));
+
+            renderLeadsTable(leads);
+            updateStatus(`Dados carregados. Total de Agendamentos: ${leads.length}`, 'bg-green-700');
+            
+        }, (error) => {
+            console.error("Erro ao ouvir dados do Firestore: ", error);
+            updateStatus(`Erro ao carregar dados: ${error.message}. Verifique as Regras de Segurança.`, 'bg-red-700');
+        });
+    }
+
+    /**
+     * Tenta inicializar o Firebase e iniciar o listener de dados.
+     */
+    async function initializeFirebase() {
+        // Se estiver no ambiente Canvas, use a configuração injetada
+        if (!isCanvasEnvironment && firebaseConfig.apiKey === 'API_KEY_REQUIRED') {
+             updateStatus("Erro de Configuração: As chaves do Firebase não foram encontradas. O Painel não pode ser carregado.", 'bg-red-700');
+             console.error("ERRO CRÍTICO no Firebase: Chaves de API ausentes.");
+             return;
+        }
+
+        updateStatus("A inicializar Firebase e autenticar...", 'bg-blue-700');
+        
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // 1. Autenticação 
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                // Se não houver token, tenta a autenticação anónima
+                await signInAnonymously(auth);
+            }
+            
+            isAuthReady = true;
+            console.log("Firebase e autenticação prontos.");
+
+            // 2. Inicia o listener de dados em tempo real
+            setupRealtimeListener();
+
+        } catch (error) {
+            console.error("ERRO CRÍTICO no Firebase:", error);
+            const displayMessage = error.message.includes('auth/api-key-not-valid') 
+                ? "Erro: Chave de API Inválida. Verifique a configuração do seu projeto."
+                : `Erro de rede ou permissão: ${error.message}`;
+
+            updateStatus(`Erro ao carregar o sistema: ${displayMessage}.`, 'bg-red-700');
+        }
+    }
+
+    // Inicializa ao carregar a página
+    window.onload = initializeFirebase;
+</script>
+
+</body>
+</html>
