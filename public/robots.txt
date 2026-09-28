@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /painel.html
 
 Sitemap: https://www.tattooateosossos.com.br/sitemap.xml
